@@ -16,7 +16,7 @@ PDF Wallet handles sensitive personal documents, so security issues are taken se
 
 Instead, report security issues responsibly by emailing us at:
 
-> 📧 **security@nerdynode.dev** *(or open a [private security advisory](https://github.com/NerdyNode/pwallet/security/advisories/new) on GitHub)*
+> 📧 **nerdynode.racoon166@passinbox.com** *(or open a [private security advisory](https://github.com/NerdyNode/pwallet/security/advisories/new) on GitHub)*
 
 ### What to include
 
