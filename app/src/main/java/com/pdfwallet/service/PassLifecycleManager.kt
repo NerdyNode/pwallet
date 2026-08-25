@@ -10,11 +10,6 @@ object PassLifecycleManager {
     fun computeState(doc: Document): PassState {
         val now = System.currentTimeMillis()
 
-        // Check user-set states first
-        if (doc.passState == PassState.ARCHIVED || doc.passState == PassState.USED) {
-            return doc.passState
-        }
-
         val journeyEpoch = doc.journeyDate
         val expiryEpoch = doc.expiryDateEpoch
 

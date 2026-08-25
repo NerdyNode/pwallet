@@ -49,6 +49,8 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -143,7 +145,7 @@ fun HomeScreen(
                 scope.launch {
                     isRefreshing = true
                     viewModel.refresh()
-                    kotlinx.coroutines.delay(500)
+                    delay(500)
                     isRefreshing = false 
                 }
             },

@@ -1,10 +1,6 @@
 package com.pdfwallet.data.db
 
 import androidx.room.TypeConverter
-import com.pdfwallet.domain.model.ProcessingStatus
-import com.pdfwallet.domain.model.DocumentType
-import com.pdfwallet.domain.model.CaptureSource
-import com.pdfwallet.domain.model.BookingStatus
 
 class EnumConverters {
 

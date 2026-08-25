@@ -9,10 +9,12 @@ Import, process, organize, and retrieve travel, identity, and everyday documents
 <p><strong>Local-first storage&nbsp;&nbsp;•&nbsp;&nbsp;Asynchronous processing&nbsp;&nbsp;•&nbsp;&nbsp;Adaptive Material 3 UI</strong></p>
 
 <p>
+  <img src="https://github.com/NerdyNode/pwallet/actions/workflows/build.yml/badge.svg" alt="Build" />
   <img src="https://img.shields.io/badge/Android-API%2026%2B-3DDC84?logo=android&logoColor=white" alt="Android API 26+" />
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin 2.2.10" />
   <img src="https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white" alt="Jetpack Compose" />
   <img src="https://img.shields.io/badge/Architecture-MVVM-6E56CF" alt="MVVM" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License" />
 </p>
 
 </div>
@@ -40,6 +42,7 @@ Import, process, organize, and retrieve travel, identity, and everyday documents
 - [Build and test](#-build-and-test)
 - [Security and privacy](#-security-and-privacy)
 - [Development principles](#-development-principles)
+- [Changelog](#-changelog)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -51,31 +54,41 @@ Import, process, organize, and retrieve travel, identity, and everyday documents
   <tr>
     <td width="50%">
       <h3>📥 Flexible capture</h3>
-      Import from the Android share sheet, file picker, or camera scanner.
+      Import from the Android share sheet, file picker, or camera scanner. Supports PDFs, images, and scanned documents.
     </td>
     <td width="50%">
       <h3>🧠 Structured extraction</h3>
-      Convert document content into searchable metadata and domain-specific fields.
+      Convert document content into searchable metadata and domain-specific fields using on-device ML or optional AI analysis.
     </td>
   </tr>
   <tr>
     <td>
       <h3>⚡ Background processing</h3>
-      Process documents reliably with WorkManager, retries, notifications, and offline queuing.
+      Process documents reliably with WorkManager — retries, progress notifications, and offline queuing built in.
     </td>
     <td>
       <h3>🔎 Fast retrieval</h3>
-      Search, filter, sort, page, and browse documents by collection.
+      Search, filter, sort, page, and browse documents by collection. Find any document instantly.
     </td>
   </tr>
   <tr>
     <td>
       <h3>🔐 Local-first security</h3>
-      Keep files private, encrypt metadata at rest, and protect access with biometrics.
+      Files live in app-private storage, metadata is encrypted with SQLCipher, and access is protected by biometrics.
     </td>
     <td>
       <h3>📐 Adaptive UI</h3>
-      Use responsive Material 3 navigation across phones, tablets, landscape, and foldables.
+      Responsive Material 3 navigation across phones, tablets, landscape mode, and foldables.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>☁️ Optional cloud sync</h3>
+      Sync documents to Google Drive when you need it. Fully optional — the app works completely offline without it.
+    </td>
+    <td>
+      <h3>📦 Backup &amp; restore</h3>
+      Export and restore your entire wallet as a local ZIP backup. Your data, your control.
     </td>
   </tr>
 </table>
@@ -90,7 +103,7 @@ Import, process, organize, and retrieve travel, identity, and everyday documents
 | Lifecycle | Expiry checks, waitlist checks, retryable processing |
 | Protection | SQLCipher-backed database and biometric app lock |
 | Data portability | Local ZIP backup and restore |
-| Integrations | Optional authentication, AI analysis, synchronization, and widget support |
+| Integrations | Optional authentication, AI analysis, Google Drive sync, and home-screen widget |
 
 ---
 
@@ -114,12 +127,14 @@ flowchart TB
 
 ### Architectural boundaries
 
-- **Presentation**: Compose screens, navigation, adaptive layouts, themes, widgets, and UI state
-- **ViewModel layer**: Lifecycle-aware state, user actions, and UI events
-- **Repository layer**: Import coordination, deduplication, persistence, and work scheduling
-- **Data layer**: Room entities, DAOs, migrations, converters, DataStore, and file management
-- **Service layer**: PDF conversion, thumbnails, barcode processing, AI mapping, lifecycle checks, and sync
-- **Worker layer**: Durable background execution isolated from composable code
+| Layer | Responsibility |
+| --- | --- |
+| **Presentation** | Compose screens, navigation, adaptive layouts, themes, widgets, and UI state |
+| **ViewModel** | Lifecycle-aware state, user actions, and UI events |
+| **Repository** | Import coordination, deduplication, persistence, and work scheduling |
+| **Data** | Room entities, DAOs, migrations, converters, DataStore, and file management |
+| **Service** | PDF conversion, thumbnails, barcode processing, AI mapping, lifecycle checks, and sync |
+| **Worker** | Durable background execution isolated from composable code |
 
 ---
 
@@ -163,19 +178,21 @@ Processing stages:
 ## 🛠️ Technology stack
 
 <table>
-  <tr><th>Layer</th><th>Implementation</th></tr>
-  <tr><td>Language</td><td>Kotlin</td></tr>
-  <tr><td>UI</td><td>Jetpack Compose, Material 3, Material 3 Adaptive</td></tr>
-  <tr><td>Architecture</td><td>MVVM and repository pattern</td></tr>
-  <tr><td>Dependency injection</td><td>Dagger Hilt</td></tr>
-  <tr><td>Persistence</td><td>Room, SQLCipher, DataStore</td></tr>
-  <tr><td>Background execution</td><td>WorkManager and coroutine-based workers</td></tr>
-  <tr><td>PDF and images</td><td>PdfBox Android, Android PDF rendering, Coil</td></tr>
-  <tr><td>OCR and barcodes</td><td>Google ML Kit and ZXing</td></tr>
-  <tr><td>AI and backend services</td><td>Gemini client SDK and Firebase services</td></tr>
-  <tr><td>Camera</td><td>CameraX</td></tr>
-  <tr><td>Cloud integration</td><td>Google Drive API</td></tr>
-  <tr><td>Build system</td><td>Gradle Kotlin DSL</td></tr>
+  <tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
+  <tr><td>Language</td><td>Kotlin 2.2.10</td><td>Primary language</td></tr>
+  <tr><td>UI</td><td>Jetpack Compose + Material 3 Adaptive</td><td>Declarative, responsive UI</td></tr>
+  <tr><td>Architecture</td><td>MVVM + Repository pattern</td><td>Clean separation of concerns</td></tr>
+  <tr><td>Dependency injection</td><td>Dagger Hilt</td><td>DI across all layers</td></tr>
+  <tr><td>Persistence</td><td>Room + SQLCipher + DataStore</td><td>Encrypted database and preferences</td></tr>
+  <tr><td>Background execution</td><td>WorkManager + Coroutines</td><td>Durable background jobs</td></tr>
+  <tr><td>PDF and images</td><td>PdfBox Android + Coil</td><td>PDF rendering and image loading</td></tr>
+  <tr><td>OCR and barcodes</td><td>ML Kit + ZXing</td><td>Barcode scanning and text recognition</td></tr>
+  <tr><td>AI analysis</td><td>Gemini SDK + Firebase AI Logic</td><td>Optional structured extraction</td></tr>
+  <tr><td>Camera</td><td>CameraX</td><td>Document and barcode capture</td></tr>
+  <tr><td>Cloud sync</td><td>Google Drive API</td><td>Optional backup and sync</td></tr>
+  <tr><td>Security</td><td>SQLCipher + Biometric + Security Crypto</td><td>Encryption and access control</td></tr>
+  <tr><td>Build system</td><td>Gradle Kotlin DSL</td><td>Build configuration</td></tr>
+  <tr><td>CI</td><td>GitHub Actions</td><td>Automated build and test</td></tr>
 </table>
 
 ---
@@ -195,7 +212,7 @@ app/src/main/java/com/pdfwallet/
 │   ├── sync/            # Synchronization services and workers
 │   └── worker/          # Durable background jobs
 ├── ui/
-│   ├── auth/            # Authentication
+│   ├── auth/            # Authentication screens
 │   ├── capture/         # Camera and share-sheet flows
 │   ├── collections/     # Category-based browsing
 │   ├── detail/          # Document detail views
@@ -203,7 +220,7 @@ app/src/main/java/com/pdfwallet/
 │   ├── home/            # Dashboard
 │   ├── lock/            # Biometric access control
 │   ├── settings/        # Preferences and data controls
-│   ├── theme/           # Design system
+│   ├── theme/           # Design system (colors, typography, glassmorphism)
 │   ├── wallet/          # Document cards and lists
 │   └── widget/          # Home-screen widget
 └── util/                # Logging, connectivity, and barcode utilities
@@ -213,11 +230,14 @@ app/src/main/java/com/pdfwallet/
 
 ## 💻 Requirements
 
-- Android Studio with Android SDK 36
-- JDK 21
-- Android API 26 or newer
-- Google Play services for Google-dependent platform features
-- Backend configuration for optional authentication, AI, and synchronization modules
+| Requirement | Value |
+| --- | --- |
+| Android Studio | Latest stable + Android SDK 36 |
+| JDK | 21 |
+| Android API | 26+ (Android 8.0 Oreo) |
+| Google Play services | Required for ML Kit, Auth, and Drive features |
+
+> **Note:** Firebase configuration (`google-services.json`) is **optional**. The app compiles and runs without it; only Firebase-backed features will be unavailable.
 
 ---
 
@@ -227,10 +247,9 @@ Keep environment-specific values in local, untracked configuration files. Never 
 
 Before building:
 
-1. Configure the required optional backend services for the features you plan to use.
-2. Add generated service configuration to the application module when required.
-3. Define local build properties for optional integrations.
-4. Verify that local configuration files are ignored by Git.
+1. Copy `setup_guide/local.properties.example` → `local.properties` and fill in your values.
+2. *(Optional)* Place your own `google-services.json` at `app/google-services.json` to enable Firebase features.
+3. Verify that `local.properties` and `app/google-services.json` are listed as ignored by Git.
 
 The application should remain usable when optional integrations are disabled or unavailable.
 
@@ -238,10 +257,10 @@ The application should remain usable when optional integrations are disabled or 
 
 ## 🧑‍💻 Developer setup
 
-See the complete setup guide in [`GitHub/SETUP.md`](GitHub/SETUP.md).
+See the complete setup guide in [`setup_guide/SETUP.md`](setup_guide/SETUP.md).
 
-The repository includes [`GitHub/local.properties.example`](GitHub/local.properties.example)
-and [`GitHub/google-services.json.example`](GitHub/google-services.json.example) as
+The repository includes [`setup_guide/local.properties.example`](setup_guide/local.properties.example)
+and [`setup_guide/google-services.json.example`](setup_guide/google-services.json.example) as
 safe templates. Copy and configure them locally; never commit the resulting
 secret or machine-specific files.
 
@@ -251,14 +270,24 @@ secret or machine-specific files.
 
 ### Build
 
-```powershell
+```bash
+# Linux / macOS
+./gradlew assembleDebug
+./gradlew assembleRelease
+
+# Windows
 .\gradlew.bat assembleDebug
 .\gradlew.bat assembleRelease
 ```
 
 ### Test
 
-```powershell
+```bash
+# Linux / macOS
+./gradlew testDebugUnitTest
+./gradlew connectedDebugAndroidTest
+
+# Windows
 .\gradlew.bat testDebugUnitTest
 .\gradlew.bat connectedDebugAndroidTest
 ```
@@ -269,13 +298,15 @@ Test coverage includes parsing and mapping, theme behavior, database migrations,
 
 ## 🛡️ Security and privacy
 
-- Source documents are stored in application-private storage.
-- Document metadata is persisted in an encrypted Room/SQLCipher database.
-- Biometric authentication can protect application access.
-- PDF rendering and barcode processing run locally.
-- AI analysis is optional and should be enabled according to the deployment privacy policy.
+- Source documents are stored in **application-private storage** — inaccessible to other apps.
+- Document metadata is persisted in an **encrypted Room/SQLCipher database**.
+- **Biometric authentication** can protect application access.
+- PDF rendering and barcode processing run **entirely on-device**.
+- AI analysis is **optional** and should be enabled according to the deployment privacy policy.
 - Backups may contain sensitive user documents and must be treated as confidential.
-- Logs should not contain raw document contents or credentials.
+- Logs must not contain raw document contents or credentials.
+
+To report a security vulnerability, see [`SECURITY.md`](SECURITY.md).
 
 ---
 
@@ -288,6 +319,12 @@ Test coverage includes parsing and mapping, theme behavior, database migrations,
 - Add unit tests for parsing, mapping, deduplication, and lifecycle rules.
 - Add instrumentation tests for navigation, database migrations, and Compose behavior.
 - Keep generated build output and local secrets out of version control.
+
+---
+
+## 📋 Changelog
+
+See [`CHANGELOG.md`](CHANGELOG.md) for a full version history.
 
 ---
 
@@ -304,5 +341,7 @@ PDF Wallet is distributed under the [MIT License](LICENSE).
 <div align="center">
 
 **Built with Kotlin, Jetpack Compose, and a privacy-first mindset.**
+
+⭐ If you find this project useful, consider giving it a star!
 
 </div>

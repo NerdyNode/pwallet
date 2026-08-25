@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pdfwallet.ui.detail.DocAccent
+import com.pdfwallet.ui.theme.DocAccent
 import com.pdfwallet.ui.detail.TicketField
 import com.pdfwallet.ui.theme.Dimens
 import kotlinx.coroutines.Dispatchers
