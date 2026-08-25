@@ -1,0 +1,36 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# App module specific
+/app/build
+/app/google-services.json
+
+# Local and generated artifacts
+/.kotlin
+/Build/Artifacts
+/gradle/gradle-daemon-jvm.properties
+app/google-services.json
+__agent_files__/
+.idea/
+.kotlin/
+*.hprof
+*.artifact.md
+build_log.txt
+dependency_updates.txt
+test.kts
+update_script.py
+generate_icons.py
+app_icon.png.png

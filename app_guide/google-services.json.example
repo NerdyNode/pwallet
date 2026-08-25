@@ -1,0 +1,8 @@
+This is a placeholder only.
+
+For Firebase-enabled builds, create a Firebase Android app for the package
+configured in app/build.gradle.kts and download its google-services.json file
+into this directory. Do not commit the downloaded file.
+
+For a local build without Firebase configuration, leave this file as-is and
+do not create app/google-services.json.

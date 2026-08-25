@@ -1,0 +1,6 @@
+# Copy this file to local.properties and update the values for your machine.
+# Never commit local.properties or real credentials.
+
+sdk.dir=C:\\path\\to\\Android\\Sdk
+GEMINI_API_KEY=
+WEB_CLIENT_ID=
