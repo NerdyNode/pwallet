@@ -10,7 +10,7 @@ class GeminiDocumentAnalyserTest {
     private lateinit var logger: FakeLogger
     private lateinit var analyser: GeminiDocumentAnalyser
 
-    class FakeLogger : Logger(mockAppLogDao()) {
+    class FakeLogger : Logger(mockAppLogDao(), kotlinx.coroutines.GlobalScope) {
         val errorLogs = mutableListOf<String>()
         override fun e(tag: String, message: String, throwable: Throwable?) {
             errorLogs.add(message)
