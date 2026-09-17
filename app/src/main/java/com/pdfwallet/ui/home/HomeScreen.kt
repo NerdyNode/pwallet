@@ -130,8 +130,7 @@ fun HomeScreen(
                     onClick = { showAddSheet = true },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = CircleShape,
-                    modifier = Modifier.padding(Dimens.SpacingNormal)
+                    shape = CircleShape
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Document", modifier = Modifier.size(28.dp))
                 }
@@ -145,7 +144,7 @@ fun HomeScreen(
                 scope.launch {
                     isRefreshing = true
                     viewModel.refresh()
-                    delay(500)
+                    delay(300)
                     isRefreshing = false 
                 }
             },
@@ -187,37 +186,22 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(Dimens.SpacingMedium))
 
             // Category Filter Pills
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = Dimens.ScreenPaddingLarge),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.SpacingMedium)
+            ScrollableTabRow(
+                selectedTabIndex = if (selectedType == null) 0 else com.pdfwallet.data.db.DocumentCategory.entries.indexOf(selectedType) + 1,
+                edgePadding = Dimens.ScreenPaddingLarge,
+                containerColor = Color.Transparent,
+                divider = {} // no divider
             ) {
-                item {
-                    FilterChip(
-                        selected = selectedType == null,
-                        onClick = { viewModel.selectedCategory.value = null },
-                        label = { Text("All") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        shape = RoundedCornerShape(Dimens.RadiusFull),
-                        border = null
-                    )
-                }
-                items(com.pdfwallet.data.db.DocumentCategory.entries) { category ->
-                    FilterChip(
+                androidx.compose.material3.Tab(
+                    selected = selectedType == null,
+                    onClick = { viewModel.selectedCategory.value = null },
+                    text = { Text("All", fontWeight = if (selectedType == null) FontWeight.Bold else FontWeight.Normal) }
+                )
+                com.pdfwallet.data.db.DocumentCategory.entries.forEachIndexed { index, category ->
+                    androidx.compose.material3.Tab(
                         selected = selectedType == category,
                         onClick = { viewModel.selectedCategory.value = category },
-                        label = { Text(category.label) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        shape = RoundedCornerShape(Dimens.RadiusFull),
-                        border = null
+                        text = { Text(category.label, fontWeight = if (selectedType == category) FontWeight.Bold else FontWeight.Normal) }
                     )
                 }
             }

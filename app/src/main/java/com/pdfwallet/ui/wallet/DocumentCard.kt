@@ -37,7 +37,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.pdfwallet.data.db.Document
 import com.pdfwallet.data.db.ProcessingStatus
-import com.pdfwallet.data.db.TicketMetadata
+import com.pdfwallet.data.db.DocumentMetadata
 import com.pdfwallet.ui.theme.Dimens
 import com.pdfwallet.ui.theme.DocAccent
 import com.pdfwallet.ui.theme.getDocAccent
@@ -165,7 +165,7 @@ fun SharedTransitionScope.DocumentCard(
             Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
 
             // Specific metadata layout
-            val meta = doc.additionalMeta
+            val meta = doc.metadata
             val formattedJourneyDate = androidx.compose.runtime.remember(doc.journeyDate) {
                 doc.journeyDate?.let { java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault()).format(java.util.Date(it)) } ?: "--"
             }
@@ -178,75 +178,75 @@ fun SharedTransitionScope.DocumentCard(
             }
 
             when (meta) {
-                is TicketMetadata.Train -> {
+                is DocumentMetadata.Train -> {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        DetailColumn("PNR", maskFn(doc.documentId), accent.onContainer)
-                        DetailColumn("TRAIN", meta.trainNumber, accent.onContainer)
-                        DetailColumn("DATE", meta.journeyDate, accent.onContainer)
-                        DetailColumn("STATUS", meta.bookingStatus.name, accent.onContainer)
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("PNR", maskFn(doc.documentId), accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("TRAIN", meta.trainNumber, accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("DATE", meta.journeyDate ?: "--", accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("STATUS", meta.bookingStatus?.name ?: "--", accent.onContainer) }
                     }
                 }
-                is TicketMetadata.Airline -> {
+                is DocumentMetadata.Airline -> {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        DetailColumn("FLIGHT", meta.flightNumber ?: "--", accent.onContainer)
-                        DetailColumn("DATE", formattedJourneyDate, accent.onContainer)
-                        DetailColumn("TIME", meta.departureTime ?: "--", accent.onContainer)
-                        DetailColumn("PNR", maskFn(doc.documentId), accent.onContainer)
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("FLIGHT", meta.flightNumber ?: "--", accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("DATE", formattedJourneyDate, accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("TIME", meta.departureTime ?: "--", accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("PNR", maskFn(doc.documentId), accent.onContainer) }
                     }
                 }
-                is TicketMetadata.Bus -> {
+                is DocumentMetadata.Bus -> {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        DetailColumn("OPERATOR", meta.operator ?: "--", accent.onContainer)
-                        DetailColumn("DATE", formattedJourneyDate, accent.onContainer)
-                        DetailColumn("TIME", meta.departureTime ?: "--", accent.onContainer)
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("OPERATOR", meta.operator ?: "--", accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("DATE", formattedJourneyDate, accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("TIME", meta.departureTime ?: "--", accent.onContainer) }
                     }
                 }
-                is TicketMetadata.Hotel -> {
+                is DocumentMetadata.Hotel -> {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        DetailColumn("CHECK-IN", meta.checkIn ?: "--", accent.onContainer)
-                        DetailColumn("CHECK-OUT", meta.checkOut ?: "--", accent.onContainer)
-                        DetailColumn("ROOMS", meta.roomDetails ?: "--", accent.onContainer)
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("CHECK-IN", meta.checkIn ?: "--", accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("CHECK-OUT", meta.checkOut ?: "--", accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("ROOMS", meta.roomDetails ?: "--", accent.onContainer) }
                     }
                 }
-                is TicketMetadata.Transit -> {
+                is DocumentMetadata.Transit -> {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        DetailColumn("OPERATOR", meta.operator ?: "--", accent.onContainer)
-                        DetailColumn("ROUTE", meta.route ?: "--", accent.onContainer)
-                        DetailColumn("VALIDITY", meta.validity ?: "--", accent.onContainer)
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("OPERATOR", meta.operator ?: "--", accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("ROUTE", meta.route ?: "--", accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("VALIDITY", meta.validity ?: "--", accent.onContainer) }
                     }
                 }
-                is TicketMetadata.Membership -> {
+                is DocumentMetadata.Membership -> {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        DetailColumn("PROVIDER", meta.provider ?: "--", accent.onContainer)
-                        DetailColumn("MEMBER", meta.memberName ?: "--", accent.onContainer)
-                        DetailColumn("VALIDITY", meta.validity ?: "--", accent.onContainer)
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("PROVIDER", meta.provider ?: "--", accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("MEMBER", meta.memberName ?: "--", accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("VALIDITY", meta.validity ?: "--", accent.onContainer) }
                     }
                 }
-                is TicketMetadata.GovernmentId -> {
+                is DocumentMetadata.GovernmentId -> {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        DetailColumn("ID NUMBER", maskFn(doc.documentId), accent.onContainer)
-                        meta.dateOfBirth?.let { DetailColumn("DOB", if (privacyMode || doc.isSensitive) "****" else it, accent.onContainer) }
+                        Box(modifier = Modifier.weight(1f)) { DetailColumn("ID NUMBER", maskFn(doc.documentId), accent.onContainer) }
+                        meta.dateOfBirth?.let { Box(modifier = Modifier.weight(1f)) { DetailColumn("DOB", if (privacyMode || doc.isSensitive) "****" else it, accent.onContainer) } }
                     }
                 }
                 else -> {
@@ -265,7 +265,7 @@ fun SharedTransitionScope.DocumentCard(
 }
 
 @Composable
-fun DetailColumn(label: String, value: String, color: Color) {
+fun DetailColumn(label: String, value: String?, color: Color) {
     Column {
         Text(
             text = label,
@@ -274,7 +274,7 @@ fun DetailColumn(label: String, value: String, color: Color) {
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = value,
+            text = value ?: "--",
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             color = color
         )

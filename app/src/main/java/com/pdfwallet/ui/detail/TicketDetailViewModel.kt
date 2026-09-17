@@ -25,6 +25,13 @@ class TicketDetailViewModel @Inject constructor(
         }
     }
 
+    fun updateDocument(doc: Document) {
+        viewModelScope.launch {
+            repository.updateDocument(doc)
+            _document.value = doc
+        }
+    }
+
     fun deleteDocument(onDeleted: () -> Unit) {
         viewModelScope.launch {
             document.value?.let { doc ->

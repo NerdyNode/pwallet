@@ -18,8 +18,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -64,7 +66,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.pdfwallet.data.db.Document
 import com.pdfwallet.data.db.DocumentType
-import com.pdfwallet.data.db.TicketMetadata
+import com.pdfwallet.data.db.DocumentMetadata
 import com.pdfwallet.ui.theme.Dimens
 import com.pdfwallet.ui.theme.DocAccent
 import com.pdfwallet.ui.theme.getDocAccent
@@ -72,6 +74,14 @@ import com.pdfwallet.util.BarcodeGenerator
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import android.content.Intent
 import java.io.File
+
+private fun mimeTypeForFile(filePath: String): String = when {
+    filePath.endsWith(".pdf", true) -> "application/pdf"
+    filePath.endsWith(".jpg", true) || filePath.endsWith(".jpeg", true) -> "image/jpeg"
+    filePath.endsWith(".png", true) -> "image/png"
+    filePath.endsWith(".webp", true) -> "image/webp"
+    else -> "*/*"
+}
 
 class TicketShape(private val cutoutRadius: Float) : Shape {
     override fun createOutline(
@@ -155,6 +165,18 @@ fun SharedTransitionScope.TicketDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showEditSheet by remember { mutableStateOf(false) }
+
+    if (showEditSheet && document != null) {
+        TicketEditBottomSheet(
+            document = document!!,
+            onDismiss = { showEditSheet = false },
+            onSave = { updatedDoc ->
+                // Assuming viewModel has an updateDocument method. If not we will add it.
+                viewModel.updateDocument(updatedDoc)
+            }
+        )
+    }
 
     if (showDeleteConfirm) {
         AlertDialog(
@@ -184,21 +206,54 @@ fun SharedTransitionScope.TicketDetailScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text(document?.title ?: "Document Details", fontWeight = FontWeight.Bold) },
+            CenterAlignedTopAppBar(
+                title = { Text(document?.title ?: "Document Details", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Navigate back")
                     }
                 },
                 actions = {
+                    document?.let { doc ->
+                        // Only show for event/airline/train
+                        val hasDates = doc.documentType == com.pdfwallet.data.db.DocumentType.AIRLINE ||
+                                       doc.documentType == com.pdfwallet.data.db.DocumentType.TRAIN ||
+                                       doc.documentType == com.pdfwallet.data.db.DocumentType.BUS ||
+                                       doc.documentType == com.pdfwallet.data.db.DocumentType.EVENT ||
+                                       doc.documentType == com.pdfwallet.data.db.DocumentType.MOVIE
+                        if (hasDates) {
+                            IconButton(onClick = { 
+                                val intent = android.content.Intent(android.content.Intent.ACTION_INSERT)
+                                    .setData(android.provider.CalendarContract.Events.CONTENT_URI)
+                                    .putExtra(android.provider.CalendarContract.Events.TITLE, doc.title)
+                                
+                                doc.journeyDate?.let { date ->
+                                    intent.putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, date)
+                                    intent.putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, date + (2 * 60 * 60 * 1000)) // 2 hours default
+                                }
+                                
+                                try {
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    // Ignore if no calendar app
+                                }
+                            }) {
+                                Icon(Icons.Default.DateRange, contentDescription = "Add to Calendar")
+                            }
+                        }
+                    }
+                    IconButton(onClick = { 
+                        showEditSheet = true
+                    }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Document")
+                    }
                     IconButton(onClick = { 
                         showDeleteConfirm = true
                     }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete Document", tint = MaterialTheme.colorScheme.error)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
@@ -226,11 +281,11 @@ fun SharedTransitionScope.TicketDetailScreen(
                                     file
                                 )
                                 val intent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "application/pdf"
+                                    type = mimeTypeForFile(doc.filePath)
                                     putExtra(Intent.EXTRA_STREAM, uri)
                                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                 }
-                                context.startActivity(Intent.createChooser(intent, "Share Ticket"))
+                                context.startActivity(Intent.createChooser(intent, "Share Document"))
                             },
                             modifier = Modifier.weight(1f).height(56.dp),
                             shape = RoundedCornerShape(Dimens.RadiusFull)
@@ -248,20 +303,20 @@ fun SharedTransitionScope.TicketDetailScreen(
                                     "${context.packageName}.fileprovider",
                                     file
                                 )
+                                val mime = mimeTypeForFile(doc.filePath)
                                 val intent = Intent(Intent.ACTION_VIEW).apply {
-                                    setDataAndType(uri, "application/pdf")
+                                    setDataAndType(uri, mime)
                                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                 }
                                 try {
                                     context.startActivity(intent)
                                 } catch (e: Exception) {
-                                    // Handle no PDF viewer installed
                                     val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "application/pdf"
+                                        type = mime
                                         putExtra(Intent.EXTRA_STREAM, uri)
                                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                     }
-                                    context.startActivity(Intent.createChooser(fallbackIntent, "Save or View PDF"))
+                                    context.startActivity(Intent.createChooser(fallbackIntent, "Save or View"))
                                 }
                             },
                             modifier = Modifier.weight(1f).height(56.dp),
@@ -269,7 +324,7 @@ fun SharedTransitionScope.TicketDetailScreen(
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Download PDF")
+                            Text("View / Download")
                         }
                     }
                 }
@@ -320,6 +375,47 @@ fun SharedTransitionScope.TicketDetailScreen(
                             snackbarHostState.showSnackbar("$label copied")
                         }
                     }
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text("Original Document", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    if (!doc.thumbnailPath.isNullOrEmpty()) {
+                        val file = java.io.File(doc.thumbnailPath)
+                        if (file.exists()) {
+                            val uri = androidx.core.content.FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                java.io.File(doc.filePath)
+                            )
+                            androidx.compose.foundation.Image(
+                                painter = coil.compose.rememberAsyncImagePainter(file),
+                                contentDescription = "Original Document",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(300.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .clickable {
+                                        val mime = mimeTypeForFile(doc.filePath)
+                                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                                            setDataAndType(uri, mime)
+                                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        }
+                                        try {
+                                            context.startActivity(intent)
+                                        } catch(e: Exception) {
+                                            val fallbackIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                                type = mime
+                                                putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            }
+                                            context.startActivity(android.content.Intent.createChooser(fallbackIntent, "Save or View"))
+                                        }
+                                    },
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         } else {
@@ -350,71 +446,16 @@ fun SharedTransitionScope.TicketContent(
                 rememberSharedContentState(key = "card-${doc.id}"),
                 animatedVisibilityScope = animatedVisibilityScope
             ),
-        shape = TicketShape(16f), // custom boarding pass shape
+        shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 8.dp
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(accent.primary)
-                    .padding(Dimens.SpacingLarge),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = doc.documentType.name,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = accent.onPrimary.copy(alpha = 0.8f)
-                    )
-                    Spacer(modifier = Modifier.height(Dimens.SpacingSmall))
-                    Text(
-                        text = doc.title,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = accent.onPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            // Body content area before cutout
-            Column(modifier = Modifier.padding(Dimens.SpacingLarge)) {
-                val template = com.pdfwallet.ui.pass.PassTemplateResolver.resolve(doc)
-                com.pdfwallet.ui.pass.PassCard(template = template, accent = accent, onCopy = onCopy)
-            }
-            
-            Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
-            
-            // Perforated Line across the cutout
-            val dashedLineColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .drawBehind {
-                        drawLine(
-                            color = dashedLineColor,
-                            start = Offset(16.dp.toPx(), 0f),
-                            end = Offset(size.width - 16.dp.toPx(), 0f),
-                            strokeWidth = 4f,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 20f), 0f)
-                        )
-                    }
+            com.pdfwallet.ui.pass.PassCard(
+                document = doc,
+                onCopy = onCopy,
+                barcodeContent = { BarcodeSection(doc, accent) }
             )
-            
-            // Bottom part of the ticket (Barcode)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                    .padding(Dimens.SpacingExtraLarge),
-                contentAlignment = Alignment.Center
-            ) {
-                BarcodeSection(doc, accent)
-            }
         }
     }
 }
@@ -436,19 +477,45 @@ fun BarcodeSection(doc: Document, accent: DocAccent) {
         }
     }
 
-    var regeneratedBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
-    LaunchedEffect(doc.rawOcrText) {
-        regeneratedBitmap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            doc.rawOcrText?.split(",")?.firstOrNull()?.let { data ->
-                // Try QR first, then Barcode
-                BarcodeGenerator.generateQRCode(data, 512, 512)?.asImageBitmap()
-                    ?: BarcodeGenerator.generateBarcode(data, 1024, 300)?.asImageBitmap()
+    var barcodeBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    var isOriginal by remember { mutableStateOf(false) }
+
+    LaunchedEffect(doc.contentHash, doc.documentId, doc.documentType) {
+        barcodeBitmap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            // Priority 1: Load original barcode image extracted from the document
+            val barcodesDir = java.io.File(context.filesDir, "barcodes")
+            val savedFile = java.io.File(barcodesDir, "${doc.contentHash}.png")
+            if (savedFile.exists()) {
+                val bmp = android.graphics.BitmapFactory.decodeFile(savedFile.absolutePath)
+                if (bmp != null) {
+                    isOriginal = true
+                    return@withContext bmp.asImageBitmap()
+                }
             }
+
+            // Priority 2: Fallback — regenerate barcode from documentId
+            isOriginal = false
+            val data = doc.documentId
+            if (!data.isNullOrEmpty()) {
+                when (doc.documentType) {
+                    com.pdfwallet.data.db.DocumentType.AIRLINE, com.pdfwallet.data.db.DocumentType.TRAIN -> {
+                        BarcodeGenerator.generatePDF417(data, 1024, 300)?.asImageBitmap()
+                            ?: BarcodeGenerator.generateQRCode(data, 512, 512)?.asImageBitmap()
+                    }
+                    com.pdfwallet.data.db.DocumentType.MOVIE, com.pdfwallet.data.db.DocumentType.HOTEL -> {
+                        BarcodeGenerator.generateQRCode(data, 512, 512)?.asImageBitmap()
+                    }
+                    else -> {
+                        BarcodeGenerator.generateBarcode(data, 1024, 300)?.asImageBitmap()
+                            ?: BarcodeGenerator.generateQRCode(data, 512, 512)?.asImageBitmap()
+                    }
+                }
+            } else null
         }
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-        regeneratedBitmap?.let { bitmap ->
+        barcodeBitmap?.let { bitmap ->
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(Dimens.RadiusMedium))
@@ -458,12 +525,16 @@ fun BarcodeSection(doc: Document, accent: DocAccent) {
             ) {
                 Image(
                     bitmap = bitmap,
-                    contentDescription = "Regenerated Barcode",
+                    contentDescription = if (isOriginal) "Original Barcode" else "Barcode",
                     modifier = Modifier.heightIn(max = 200.dp).fillMaxWidth(0.8f)
                 )
             }
             Spacer(modifier = Modifier.height(Dimens.SpacingSmall))
-            Text("Regenerated Barcode", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                if (isOriginal) "Original Barcode" else "Regenerated Barcode",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
         }
     }

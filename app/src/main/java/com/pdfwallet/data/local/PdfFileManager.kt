@@ -31,7 +31,14 @@ class PdfFileManager @Inject constructor(
     suspend fun copyToPrivateStorage(uri: Uri): Pair<String, String> = withContext(Dispatchers.IO) {
         try {
             logger.i("PdfFileManager", "Starting copy from URI: $uri")
-            val uniqueFilename = "${UUID.randomUUID()}.pdf"
+            val mimeType = context.contentResolver.getType(uri) ?: ""
+            val extension = when {
+                mimeType.contains("image/png") -> ".png"
+                mimeType.contains("image/jpeg") || mimeType.contains("image/jpg") -> ".jpg"
+                mimeType.contains("image/webp") -> ".webp"
+                else -> ".pdf"
+            }
+            val uniqueFilename = "${UUID.randomUUID()}$extension"
             val destFile = File(pdfsDir, uniqueFilename)
             
             val digest = MessageDigest.getInstance("SHA-256")

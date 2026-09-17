@@ -1,18 +1,25 @@
 package com.pdfwallet.service.ai
 
 import com.pdfwallet.data.db.BookingStatus
+import com.pdfwallet.data.db.DocumentMetadata
 import com.pdfwallet.data.db.DocumentType
 import com.pdfwallet.data.db.Passenger
-import com.pdfwallet.data.db.TicketMetadata
+import java.text.SimpleDateFormat
+import java.util.Locale
 
-/**
- * Maps [AiDocumentResult] fields to:
- *  - A [DocumentType] for the database column
- *  - A [TicketMetadata] sealed-class value for rich card rendering
- *
- * All fields have safe defaults so nothing can cause a crash.
- */
 object AiResultMapper {
+
+    private fun format12Hour(timeStr: String?): String? {
+        if (timeStr.isNullOrBlank()) return null
+        return try {
+            val sdf24 = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val sdf12 = SimpleDateFormat("hh:mm a", Locale.getDefault())
+            val date = sdf24.parse(timeStr)
+            if (date != null) sdf12.format(date) else timeStr
+        } catch (e: Exception) {
+            timeStr
+        }
+    }
 
     data class MappedResult(
         val documentType: DocumentType,
@@ -24,9 +31,9 @@ object AiResultMapper {
         val expiryDateEpoch: Long?,
         val sourceLocation: String?,
         val destinationLocation: String?,
-        val journeyDate: Long?,          // epoch millis or null
+        val journeyDate: Long?,
         val bookingStatus: BookingStatus?,
-        val ticketMetadata: TicketMetadata?
+        val ticketMetadata: DocumentMetadata?
     )
 
     fun map(result: AiDocumentResult): MappedResult {
@@ -34,22 +41,31 @@ object AiResultMapper {
             "TRAIN_TICKET", "TRAIN"  -> DocumentType.TRAIN
             "FLIGHT_TICKET", "AIRLINE" -> DocumentType.AIRLINE
             "BUS_TICKET", "BUS"    -> DocumentType.BUS
-            "GOVERNMENT_ID" -> DocumentType.GOVERNMENT_ID
-            "HOTEL_BOOKING", "HOTEL" -> DocumentType.HOTEL
-            "TRANSIT_PASS", "TRANSIT" -> DocumentType.TRANSIT
-            "MEMBERSHIP_CARD", "MEMBERSHIP" -> DocumentType.MEMBERSHIP
-            "CERTIFICATE" -> DocumentType.CERTIFICATE
-            else            -> DocumentType.OTHER
+            "GOVERNMENT_ID" -> parseGovIdType(result.governmentIdDetails?.idType)
+            "HOTEL_BOOKING", "HOTEL" -> DocumentType.GENERIC // Or DocumentType.HOTEL if it exists in DocumentType
+            "MOVIE_TICKET", "MOVIE" -> DocumentType.MOVIE
+            "TRANSIT_PASS", "TRANSIT" -> DocumentType.GENERIC
+            "MEMBERSHIP_CARD", "MEMBERSHIP" -> DocumentType.GENERIC
+            "CERTIFICATE" -> DocumentType.GENERIC
+            else            -> DocumentType.UNKNOWN
         }
 
-        val ticketMetadata: TicketMetadata? = when (docType) {
+        val ticketMetadata: DocumentMetadata? = when (docType) {
             DocumentType.TRAIN   -> mapTrainMetadata(result)
             DocumentType.AIRLINE -> mapFlightMetadata(result)
             DocumentType.BUS     -> mapBusMetadata(result)
-            DocumentType.GOVERNMENT_ID, DocumentType.CERTIFICATE -> mapGovernmentIdMetadata(result)
-            DocumentType.HOTEL   -> mapHotelMetadata(result)
-            DocumentType.TRANSIT -> mapTransitMetadata(result)
-            DocumentType.MEMBERSHIP -> mapMembershipMetadata(result)
+            DocumentType.AADHAAR, DocumentType.PAN_CARD, DocumentType.PASSPORT,
+            DocumentType.DRIVING_LICENSE, DocumentType.VOTER_ID -> mapGovernmentIdMetadata(result)
+            DocumentType.MOVIE   -> mapMovieMetadata(result)
+            DocumentType.GENERIC -> {
+                if (result.documentType.uppercase() == "TRANSIT_PASS" || result.documentType.uppercase() == "TRANSIT") {
+                    mapTransitMetadata(result)
+                } else if (result.documentType.uppercase() == "MEMBERSHIP_CARD" || result.documentType.uppercase() == "MEMBERSHIP") {
+                    mapMembershipMetadata(result)
+                } else if (result.documentType.uppercase() == "HOTEL_BOOKING" || result.documentType.uppercase() == "HOTEL") {
+                    mapHotelMetadata(result)
+                } else null
+            }
             else -> null
         }
 
@@ -62,7 +78,6 @@ object AiResultMapper {
             }
         }
 
-        // Parse journeyDate string ("YYYY-MM-DD") to epoch millis
         val journeyEpoch = result.journeyDate?.let { parseToEpochMillis(it) }
 
         val expiryEpoch = result.expiryDate?.let {
@@ -89,18 +104,30 @@ object AiResultMapper {
         )
     }
 
-    // ── Metadata builders ────────────────────────────────────────────────────
+    private fun parseGovIdType(typeString: String?): DocumentType {
+        if (typeString == null) return DocumentType.GENERIC
+        val up = typeString.uppercase()
+        return when {
+            up.contains("AADHAAR") -> DocumentType.AADHAAR
+            up.contains("PAN") -> DocumentType.PAN_CARD
+            up.contains("PASSPORT") -> DocumentType.PASSPORT
+            up.contains("DRIVING") -> DocumentType.DRIVING_LICENSE
+            up.contains("VOTER") -> DocumentType.VOTER_ID
+            else -> DocumentType.GENERIC
+        }
+    }
 
-    private fun mapTrainMetadata(result: AiDocumentResult): TicketMetadata.Train? {
+    private fun mapTrainMetadata(result: AiDocumentResult): DocumentMetadata.Train? {
         val d = result.trainDetails ?: return null
-        return TicketMetadata.Train(
+        return DocumentMetadata.Train(
+            passengerName = d.passengerName ?: result.holderName,
             trainNumber = d.trainNumber ?: "Unknown",
             trainName = d.trainName,
             journeyDate = result.journeyDate ?: "Unknown",
             boardingStation = d.boardingStation ?: result.sourceLocation ?: "Unknown",
             destinationStation = d.destinationStation ?: result.destinationLocation ?: "Unknown",
-            departureTime = d.departureTime,
-            arrivalTime = d.arrivalTime,
+            departureTime = format12Hour(d.departureTime),
+            arrivalTime = format12Hour(d.arrivalTime),
             coach = d.coach,
             berth = d.berth,
             travelClass = d.travelClass ?: "Unknown",
@@ -121,42 +148,75 @@ object AiResultMapper {
         )
     }
 
-    private fun mapFlightMetadata(result: AiDocumentResult): TicketMetadata.Airline? {
+    private fun mapFlightMetadata(result: AiDocumentResult): DocumentMetadata.Airline? {
         val d = result.flightDetails ?: return null
-        return TicketMetadata.Airline(
+        return DocumentMetadata.Airline(
+            passengerName = d.passengerName,
             airlineName = d.airlineName,
             flightNumber = d.flightNumber,
-            departureTime = d.departureTime,
-            arrivalTime = d.arrivalTime,
-            source = result.sourceLocation,
-            destination = result.destinationLocation,
+            departureTime = format12Hour(d.departureTime),
+            arrivalTime = format12Hour(d.arrivalTime),
+            origin = DocumentMetadata.AirportInfo(iataCode = d.originAirportCode, cityName = result.sourceLocation, airportName = null),
+            destination = DocumentMetadata.AirportInfo(iataCode = d.destinationAirportCode, cityName = result.destinationLocation, airportName = null),
             seat = d.seat,
             gate = d.gate,
-            terminal = d.terminal
+            terminal = d.terminal,
+            pnr = d.bookingReference ?: result.documentId
         )
     }
 
-    private fun mapBusMetadata(result: AiDocumentResult): TicketMetadata.Bus? {
+    private fun mapBusMetadata(result: AiDocumentResult): DocumentMetadata.Bus? {
         val d = result.busDetails ?: return null
-        return TicketMetadata.Bus(
-            operator = d.operator,
-            departureTime = d.departureTime,
-            source = result.sourceLocation,
+        return DocumentMetadata.Bus(
+            operatorName = d.operator,
+            departureTime = format12Hour(d.departureTime),
+            origin = result.sourceLocation,
             destination = result.destinationLocation,
-            seat = d.seat
+            seatNumber = d.seat
         )
     }
 
-    private fun mapGovernmentIdMetadata(result: AiDocumentResult): TicketMetadata.GovernmentId {
-        return TicketMetadata.GovernmentId(
-            dateOfBirth = result.dateOfBirth,
-            fatherOrGuardianName = result.fatherOrGuardianName
+    private fun mapGovernmentIdMetadata(result: AiDocumentResult): DocumentMetadata.GovernmentId {
+        val d = result.governmentIdDetails
+        
+        val idType = when (parseGovIdType(d?.idType)) {
+            DocumentType.AADHAAR -> DocumentMetadata.IdType.AADHAAR
+            DocumentType.PAN_CARD -> DocumentMetadata.IdType.PAN
+            DocumentType.PASSPORT -> DocumentMetadata.IdType.PASSPORT
+            DocumentType.DRIVING_LICENSE -> DocumentMetadata.IdType.DRIVING_LICENSE
+            DocumentType.VOTER_ID -> DocumentMetadata.IdType.VOTER_ID
+            else -> DocumentMetadata.IdType.OTHER
+        }
+
+        return DocumentMetadata.GovernmentId(
+            idType = idType,
+            fullName = d?.fullName ?: result.holderName,
+            idNumber = d?.idNumber ?: result.documentId,
+            gender = d?.gender,
+            dateOfBirth = d?.dateOfBirth ?: result.dateOfBirth,
+            fatherName = d?.fatherOrGuardianName ?: result.fatherOrGuardianName,
+            address = d?.address,
+            issueDate = result.issueDate,
+            expiryDate = result.expiryDate,
+            issuingAuthority = null
         )
     }
 
-    private fun mapHotelMetadata(result: AiDocumentResult): TicketMetadata.Hotel? {
+    private fun mapMovieMetadata(result: AiDocumentResult): DocumentMetadata.Movie? {
+        val d = result.movieDetails ?: return null
+        return DocumentMetadata.Movie(
+            cinemaName = d.cinemaName,
+            movieName = d.movieName,
+            showDate = d.showDate ?: result.journeyDate,
+            showTime = format12Hour(d.showTime),
+            screenName = d.screen,
+            seatNumbers = d.seats?.split(",")?.map { it.trim() }
+        )
+    }
+
+    private fun mapHotelMetadata(result: AiDocumentResult): DocumentMetadata.Hotel? {
         val d = result.hotelDetails ?: return null
-        return TicketMetadata.Hotel(
+        return DocumentMetadata.Hotel(
             hotelName = d.hotelName,
             checkIn = d.checkIn,
             checkOut = d.checkOut,
@@ -164,32 +224,30 @@ object AiResultMapper {
         )
     }
 
-    private fun mapTransitMetadata(result: AiDocumentResult): TicketMetadata.Transit? {
+    private fun mapTransitMetadata(result: AiDocumentResult): DocumentMetadata.Transit? {
         val d = result.transitDetails ?: return null
-        return TicketMetadata.Transit(
+        return DocumentMetadata.Transit(
             operator = d.operator,
             route = d.route,
             validity = d.validity
         )
     }
 
-    private fun mapMembershipMetadata(result: AiDocumentResult): TicketMetadata.Membership? {
+    private fun mapMembershipMetadata(result: AiDocumentResult): DocumentMetadata.Membership? {
         val d = result.membershipDetails ?: return null
-        return TicketMetadata.Membership(
+        return DocumentMetadata.Membership(
             provider = d.provider,
             memberName = d.memberName,
             validity = d.validity
         )
     }
 
-    // ── Date parsing ─────────────────────────────────────────────────────────
-
     private fun parseToEpochMillis(dateStr: String): Long? {
         return try {
             val parts = dateStr.split("-")
             if (parts.size != 3) return null
             val year  = parts[0].toInt()
-            val month = parts[1].toInt() - 1  // Calendar months are 0-based
+            val month = parts[1].toInt() - 1  
             val day   = parts[2].toInt()
             val cal = java.util.Calendar.getInstance().apply {
                 set(year, month, day, 0, 0, 0)

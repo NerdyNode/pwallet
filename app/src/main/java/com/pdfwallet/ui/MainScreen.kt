@@ -16,7 +16,12 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.filled.Wallet
+import androidx.compose.material.icons.outlined.Wallet
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.*
@@ -35,16 +40,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.pdfwallet.data.db.Document
 import com.pdfwallet.ui.home.HomeScreen
-import com.pdfwallet.ui.files.FilesScreen
 import com.pdfwallet.ui.collections.CollectionsScreen
 import com.pdfwallet.ui.settings.SettingsScreen
 import com.pdfwallet.ui.theme.Dimens
 
 sealed class BottomNavItem(val route: String, val title: String, val selectedIcon: ImageVector, val unselectedIcon: ImageVector) {
-    object Home : BottomNavItem("home_tab", "Home", Icons.Filled.Home, Icons.Outlined.Home)
-    object Files : BottomNavItem("files_tab", "Files", Icons.Filled.Description, Icons.Outlined.Description)
-    object Collections : BottomNavItem("collections_tab", "Collections", Icons.Filled.FolderCopy, Icons.Outlined.FolderCopy)
-    object Settings : BottomNavItem("settings_tab", "Settings", Icons.Filled.Settings, Icons.Outlined.Settings)
+    object Wallet : BottomNavItem("home_tab", "Wallet", Icons.Filled.Wallet, Icons.Outlined.Wallet)
+    object Stats : BottomNavItem("collections_tab", "Stats", Icons.Filled.BarChart, Icons.Outlined.BarChart)
+    object Profile : BottomNavItem("settings_tab", "Profile", Icons.Filled.Person, Icons.Outlined.Person)
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
@@ -57,10 +60,9 @@ fun MainScreen(
 ) {
     val navController = rememberNavController()
     val navItems = listOf(
-        BottomNavItem.Home,
-        BottomNavItem.Files,
-        BottomNavItem.Collections,
-        BottomNavItem.Settings
+        BottomNavItem.Wallet,
+        BottomNavItem.Stats,
+        BottomNavItem.Profile
     )
     
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -138,14 +140,14 @@ fun MainScreen(
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = BottomNavItem.Home.route,
+                startDestination = BottomNavItem.Wallet.route,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
                 enterTransition = { fadeIn(tween(300)) + slideInVertically { it / 8 } },
                 exitTransition = { fadeOut(tween(200)) }
             ) {
-                composable(BottomNavItem.Home.route) {
+                composable(BottomNavItem.Wallet.route) {
                     HomeScreen(
                         sharedTransitionScope = sharedTransitionScope,
                         animatedVisibilityScope = animatedVisibilityScope,
@@ -154,7 +156,7 @@ fun MainScreen(
                         onNavigateToDocumentDetail = onNavigateToDocumentDetail,
                         onNavigateToCamera = { navController.navigate("camera_scanner") },
                         onNavigateToTab = { route ->
-                            val targetRoute = if (route == "backup_tab") BottomNavItem.Settings.route else route
+                            val targetRoute = if (route == "backup_tab") BottomNavItem.Profile.route else route
                             navController.navigate(targetRoute) {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
@@ -165,15 +167,10 @@ fun MainScreen(
                         }
                     )
                 }
-                composable(BottomNavItem.Files.route) {
-                    FilesScreen(
-                        onNavigateToDocumentDetail = onNavigateToDocumentDetail
-                    )
-                }
-                composable(BottomNavItem.Collections.route) {
+                composable(BottomNavItem.Stats.route) {
                     CollectionsScreen(
                         onNavigateToHome = {
-                            navController.navigate(BottomNavItem.Home.route) {
+                            navController.navigate(BottomNavItem.Wallet.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
@@ -183,7 +180,7 @@ fun MainScreen(
                         }
                     )
                 }
-                composable(BottomNavItem.Settings.route) {
+                composable(BottomNavItem.Profile.route) {
                     SettingsScreen(
                         onNavigateToDebug = { onNavigateToRoute("debug_logs") }
                     )

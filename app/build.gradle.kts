@@ -22,8 +22,8 @@ android {
         applicationId = "com.pdfwallet"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -35,9 +35,9 @@ android {
         if (localPropertiesFile.exists()) {
             properties.load(localPropertiesFile.inputStream())
         }
-        val geminiApiKey = properties.getProperty("GEMINI_API_KEY") ?: ""
+        val geminiApiKey = (properties.getProperty("GEMINI_API_KEY") ?: "").trim('"')
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
-        val webClientId = properties.getProperty("WEB_CLIENT_ID") ?: ""
+        val webClientId = (properties.getProperty("WEB_CLIENT_ID") ?: "").trim('"')
         buildConfigField("String", "WEB_CLIENT_ID", "\"$webClientId\"")
     }
 
@@ -79,6 +79,9 @@ android {
             excludes += "META-INF/ASL2.0"
             excludes += "META-INF/*.kotlin_module"
         }
+        jniLibs {
+            useLegacyPackaging = false
+        }
     }
     lint {
         abortOnError = false
@@ -91,6 +94,9 @@ dependencies {
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
+    implementation("androidx.lifecycle:lifecycle-process:2.8.4")
     
     // Compose BOM — do NOT use a local val; inline to avoid early resolution
     implementation(platform("androidx.compose:compose-bom:2024.10.00"))
@@ -102,6 +108,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.material3.adaptive:adaptive:1.0.0")
+    implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("androidx.compose.material3.adaptive:adaptive-layout:1.0.0")
     implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.0.0")
     implementation("androidx.navigation:navigation-compose:2.8.5")
@@ -169,9 +176,9 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     
     // CameraX
-    implementation("androidx.camera:camera-camera2:1.3.4")
-    implementation("androidx.camera:camera-lifecycle:1.3.4")
-    implementation("androidx.camera:camera-view:1.3.4")
+    implementation("androidx.camera:camera-camera2:1.4.1")
+    implementation("androidx.camera:camera-lifecycle:1.4.1")
+    implementation("androidx.camera:camera-view:1.4.1")
     
     // Glance Widget
     implementation("androidx.glance:glance-appwidget:1.1.0")

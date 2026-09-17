@@ -28,15 +28,26 @@ class SettingsRepository @Inject constructor(
         val USER_IMAGE = stringPreferencesKey("user_image")
         val LAST_BACKUP_TIME = androidx.datastore.preferences.core.longPreferencesKey("last_backup_time")
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val PREVENT_SCREENSHOTS = booleanPreferencesKey("prevent_screenshots")
     }
 
     val useDynamicColorFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[USE_DYNAMIC_COLOR] ?: true // default true
     }
 
+    val preventScreenshotsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PREVENT_SCREENSHOTS] ?: true // Default to true for privacy
+    }
+
     suspend fun setUseDynamicColor(useDynamic: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[USE_DYNAMIC_COLOR] = useDynamic
+        }
+    }
+
+    suspend fun setPreventScreenshots(prevent: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PREVENT_SCREENSHOTS] = prevent
         }
     }
 

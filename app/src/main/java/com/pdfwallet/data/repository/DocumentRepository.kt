@@ -16,6 +16,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.pdfwallet.data.db.OfflineDocumentDao
@@ -58,8 +60,12 @@ class DocumentRepository @Inject constructor(
         return documentDao.getDocumentsExpiringBefore(epochMillis)
     }
 
-    suspend fun getDocumentById(id: Long): Document? {
-        return documentDao.getById(id)
+    suspend fun getDocumentById(id: Long): Document? = withContext(Dispatchers.IO) {
+        documentDao.getById(id)
+    }
+
+    suspend fun updateDocument(document: Document) = withContext(Dispatchers.IO) {
+        documentDao.update(document)
     }
 
     suspend fun captureDocument(uri: Uri, source: CaptureSource) {
@@ -114,7 +120,7 @@ class DocumentRepository @Inject constructor(
                 expiryDate = null,
                 sourceLocation = null,
                 destinationLocation = null,
-                additionalMeta = null,
+                metadata = null,
                 processingStatus = ProcessingStatus.PENDING,
                 contentHash = contentHash,
                 captureSource = source

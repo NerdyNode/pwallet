@@ -2,12 +2,15 @@ package com.pdfwallet.data.db
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.ColumnInfo
 
 enum class ProcessingStatus {
     PENDING,
     PROCESSING,
     COMPLETE,
-    FAILED
+    FAILED,
+    NEEDS_RESCAN,
+    NEEDS_REVIEW
 }
 
 enum class CaptureSource {
@@ -15,10 +18,14 @@ enum class CaptureSource {
     SHARE_INTENT
 }
 
+enum class TextQualityTier {
+    RICH, DECENT, SPARSE, POOR, UNKNOWN
+}
+
 @Entity(tableName = "documents")
 data class Document(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val documentType: DocumentType = DocumentType.OTHER,
+    val documentType: DocumentType = DocumentType.UNKNOWN,
     val importDate: Long,
     val filePath: String,
     val thumbnailPath: String?,
@@ -30,7 +37,7 @@ data class Document(
     val expiryDate: String?,
     val sourceLocation: String?,
     val destinationLocation: String?,
-    val additionalMeta: TicketMetadata?,
+    @ColumnInfo(name = "additionalMeta") val metadata: DocumentMetadata?,
     val bookingStatus: BookingStatus? = null,
     val journeyDate: Long? = null,
     val processingStatus: ProcessingStatus = ProcessingStatus.PENDING,
@@ -42,5 +49,10 @@ data class Document(
     val isSensitive: Boolean = false,
     val maskedIdentifier: String? = null,
     val collectionId: Long? = null,
-    val localPath: String? = null
+    val localPath: String? = null,
+    
+    // Architecture V2 Upgrade Fields
+    val aiConfidence: Float = 0f,
+    val textQualityTier: TextQualityTier = TextQualityTier.UNKNOWN,
+    val validationFlags: List<String> = emptyList()
 )

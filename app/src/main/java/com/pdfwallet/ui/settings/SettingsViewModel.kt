@@ -30,6 +30,19 @@ class SettingsViewModel @Inject constructor(
             initialValue = true
         )
 
+    val preventScreenshots: StateFlow<Boolean> = settingsRepository.preventScreenshotsFlow
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true
+        )
+
+    fun togglePreventScreenshots(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setPreventScreenshots(enabled)
+        }
+    }
+
     val themeModeFlow: StateFlow<com.pdfwallet.ui.theme.ThemeMode> = settingsRepository.themeModeFlow
         .stateIn(
             scope = viewModelScope,

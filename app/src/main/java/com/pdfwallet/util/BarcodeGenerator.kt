@@ -40,4 +40,21 @@ object BarcodeGenerator {
             null
         }
     }
+
+    fun generatePDF417(text: String, width: Int = 1024, height: Int = 300): Bitmap? {
+        if (text.isEmpty()) return null
+        return try {
+            val bitMatrix = MultiFormatWriter().encode(text, BarcodeFormat.PDF_417, width, height)
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+                }
+            }
+            bitmap
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 }

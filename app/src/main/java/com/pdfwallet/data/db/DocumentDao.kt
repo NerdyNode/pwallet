@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import androidx.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
 
@@ -42,6 +43,9 @@ interface DocumentDao {
 
     @Query("UPDATE documents SET processingStatus = :status WHERE id = :id")
     suspend fun updateProcessingStatus(id: Long, status: ProcessingStatus)
+    
+    @Update
+    suspend fun update(document: Document)
     
     @Query("SELECT documentType, COUNT(*) as count FROM documents GROUP BY documentType")
     fun getDocumentTypeCounts(): Flow<List<DocumentTypeCount>>

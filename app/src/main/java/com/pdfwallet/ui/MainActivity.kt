@@ -47,6 +47,16 @@ class MainActivity : FragmentActivity() {
             val useDynamicColor by settingsRepository.useDynamicColorFlow.collectAsStateWithLifecycle(initialValue = true)
             val themeMode by settingsRepository.themeModeFlow.collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
             val isUserLoggedIn by authRepository.isUserLoggedIn.collectAsStateWithLifecycle()
+            val preventScreenshots by settingsRepository.preventScreenshotsFlow.collectAsStateWithLifecycle(initialValue = true)
+            
+            // Apply FLAG_SECURE dynamically
+            androidx.compose.runtime.LaunchedEffect(preventScreenshots) {
+                if (preventScreenshots) {
+                    window.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE)
+                } else {
+                    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
             
             PDFWalletTheme(themeMode = themeMode, dynamicColor = useDynamicColor) {
                 Surface(
@@ -68,6 +78,10 @@ class MainActivity : FragmentActivity() {
                             }
                             composable("lock") {
                                 AppLockScreen(onUnlocked = {
+                                    // Reset background timer so we don't instantly relock
+                                    val prefs = getSharedPreferences("app_lock", android.content.Context.MODE_PRIVATE)
+                                    prefs.edit().putLong("last_background_time", System.currentTimeMillis()).apply()
+                                    
                                     navController.navigate("main") {
                                         popUpTo("lock") { inclusive = true }
                                     }
@@ -75,6 +89,28 @@ class MainActivity : FragmentActivity() {
                             }
 
                             composable("main") {
+                                // Background timeout check
+                                androidx.compose.runtime.DisposableEffect(androidx.lifecycle.ProcessLifecycleOwner.get()) {
+                                    val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+                                        val prefs = getSharedPreferences("app_lock", android.content.Context.MODE_PRIVATE)
+                                        if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) {
+                                            prefs.edit().putLong("last_background_time", System.currentTimeMillis()).apply()
+                                        } else if (event == androidx.lifecycle.Lifecycle.Event.ON_START) {
+                                            val lastBackground = prefs.getLong("last_background_time", 0L)
+                                            val isLocked = navController.currentDestination?.route == "lock"
+                                            if (!isLocked && lastBackground > 0 && System.currentTimeMillis() - lastBackground > 60_000L) {
+                                                navController.navigate("lock") {
+                                                    popUpTo(0) // Clear stack
+                                                }
+                                            }
+                                        }
+                                    }
+                                    androidx.lifecycle.ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
+                                    onDispose {
+                                        androidx.lifecycle.ProcessLifecycleOwner.get().lifecycle.removeObserver(observer)
+                                    }
+                                }
+
                                 MainScreen(
                                     sharedTransitionScope = this@SharedTransitionLayout,
                                     animatedVisibilityScope = this@composable,

@@ -18,15 +18,14 @@ local.properties
 /app/build
 /app/google-services.json
 
-# Local and generated artifacts
-/.kotlin
-/Build/Artifacts
-/gradle/gradle-daemon-jvm.properties
-app/google-services.json
-__agent_files__/
+# IDE and tooling
 .idea/
 .kotlin/
 *.hprof
+
+# Local and generated artifacts
+/Artifacts/
+/gradle/gradle-daemon-jvm.properties
 *.artifact.md
 build_log.txt
 dependency_updates.txt
@@ -34,3 +33,8 @@ test.kts
 update_script.py
 generate_icons.py
 app_icon.png.png
+
+# Agent scratch files
+implementation_plan.md
+__agent_files__/
+

@@ -3,6 +3,7 @@ package com.pdfwallet.ui.settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -76,122 +77,178 @@ fun SettingsScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = Dimens.ScreenPaddingLarge)
-        ) {
-            stickyHeader {
-                Surface(
-                    color = MaterialTheme.colorScheme.background,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.SpacingSmall)
-                ) {
-                    Text("Security", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                }
-            }
-            item {
-                SettingsSwitchItem(
-                    title = "Biometric Lock",
-                    subtitle = "Require fingerprint to open the app",
-                    icon = Icons.Default.Fingerprint,
-                    checked = isBiometricEnabled,
-                    onCheckedChange = { viewModel.setBiometricEnabled(it) }
-                )
-                Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
-            }
-            
-            stickyHeader {
-                Surface(
-                    color = MaterialTheme.colorScheme.background,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.SpacingSmall)
-                ) {
-                    Text("Appearance", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                }
-            }
-            item {
-                SettingsSwitchItem(
-                    title = "Dynamic Colors",
-                    subtitle = "Use system wallpaper colors",
-                    icon = Icons.Default.Palette,
-                    checked = useDynamicColor,
-                    onCheckedChange = { viewModel.setDynamicColorEnabled(it) }
-                )
-                
-                Spacer(modifier = Modifier.height(Dimens.SpacingMedium))
-                Text("Theme", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(modifier = Modifier.height(Dimens.SpacingSmall))
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(
-                        selected = themeMode == ThemeMode.SYSTEM,
-                        onClick = { viewModel.setThemeMode(ThemeMode.SYSTEM) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
-                    ) { Text("System") }
-                    SegmentedButton(
-                        selected = themeMode == ThemeMode.LIGHT,
-                        onClick = { viewModel.setThemeMode(ThemeMode.LIGHT) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
-                    ) { Text("Light") }
-                    SegmentedButton(
-                        selected = themeMode == ThemeMode.DARK,
-                        onClick = { viewModel.setThemeMode(ThemeMode.DARK) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
-                    ) { Text("Dark") }
-                }
-                Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
-            }
+        SettingsContent(
+            padding = padding,
+            viewModel = viewModel,
+            onNavigateToDebug = onNavigateToDebug
+        )
+    }
+}
 
-            stickyHeader {
-                Surface(
-                    color = MaterialTheme.colorScheme.background,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.SpacingSmall)
-                ) {
-                    Text("Data & Backup", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                }
-            }
-            item {
-                SettingsActionItem(
-                    title = "Backup to File",
-                    subtitle = if (lastBackupTime > 0) "Last backup: ${dateFormat.format(Date(lastBackupTime))}" else "Create a local backup",
-                    icon = Icons.Default.Save,
-                    onClick = { backupLauncher.launch("pdfwallet_backup.zip") }
-                )
-                
-                SettingsActionItem(
-                    title = "Restore from File",
-                    subtitle = "Restore a previous backup",
-                    icon = Icons.Default.SettingsBackupRestore,
-                    onClick = { restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream")) }
-                )
-                Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
-            }
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsContent(
+    padding: PaddingValues,
+    viewModel: SettingsViewModel,
+    onNavigateToDebug: () -> Unit
+) {
+    val isBiometricEnabled by viewModel.isBiometricEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val themeMode by viewModel.themeModeFlow.collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
+    val useDynamicColor by viewModel.useDynamicColor.collectAsStateWithLifecycle(initialValue = true)
+    val lastBackupTime by viewModel.lastBackupTime.collectAsStateWithLifecycle(initialValue = 0L)
+    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()) }
+    val context = LocalContext.current
+    
+    val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        uri?.let { viewModel.performBackup(context, it) }
+    }
+    
+    val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { viewModel.performRestore(context, it) }
+    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(horizontal = Dimens.ScreenPaddingLarge),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpacingSmall)
+    ) {
+        stickyHeader {
+            Text(
+                text = "Security",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(vertical = Dimens.SpacingSmall)
+            )
+        }
+        item {
+            val isBiometricEnabled by viewModel.isBiometricEnabled.collectAsStateWithLifecycle()
+            val preventScreenshots by viewModel.preventScreenshots.collectAsStateWithLifecycle()
+
+            SettingsSwitchItem(
+                title = "Biometric Lock",
+                subtitle = "Require fingerprint to open the app",
+                icon = Icons.Default.Fingerprint,
+                checked = isBiometricEnabled,
+                onCheckedChange = { viewModel.setBiometricEnabled(it) }
+            )
             
-            stickyHeader {
-                Surface(
-                    color = MaterialTheme.colorScheme.background,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.SpacingSmall)
-                ) {
-                    Text("About", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                }
+            Spacer(modifier = Modifier.height(Dimens.SpacingMedium))
+            
+            SettingsSwitchItem(
+                title = "Prevent Screenshots",
+                subtitle = "Block screenshots to protect sensitive IDs",
+                icon = Icons.Default.Security,
+                checked = preventScreenshots,
+                onCheckedChange = { viewModel.togglePreventScreenshots(it) }
+            )
+            
+            Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
+        }
+        
+        stickyHeader {
+            Text(
+                text = "Appearance",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(vertical = Dimens.SpacingSmall)
+            )
+        }
+        item {
+            SettingsSwitchItem(
+                title = "Dynamic Colors",
+                subtitle = "Use system wallpaper colors",
+                icon = Icons.Default.Palette,
+                checked = useDynamicColor,
+                onCheckedChange = { viewModel.setDynamicColorEnabled(it) }
+            )
+            
+            Spacer(modifier = Modifier.height(Dimens.SpacingMedium))
+            Text("Theme", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(Dimens.SpacingSmall))
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                SegmentedButton(
+                    selected = themeMode == ThemeMode.SYSTEM,
+                    onClick = { viewModel.setThemeMode(ThemeMode.SYSTEM) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                ) { Text("System") }
+                SegmentedButton(
+                    selected = themeMode == ThemeMode.LIGHT,
+                    onClick = { viewModel.setThemeMode(ThemeMode.LIGHT) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+                ) { Text("Light") }
+                SegmentedButton(
+                    selected = themeMode == ThemeMode.DARK,
+                    onClick = { viewModel.setThemeMode(ThemeMode.DARK) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+                ) { Text("Dark") }
             }
-            item {
-                SettingsActionItem(
-                    title = "Debug Logs",
-                    subtitle = "View app diagnostics",
-                    icon = Icons.Default.BugReport,
-                    onClick = onNavigateToDebug
-                )
-                
-                Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
-                
-                Text(
-                    text = "App Version ${BuildConfig.VERSION_NAME}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.SpacingLarge),
-                    textAlign = TextAlign.Center
-                )
-            }
+            Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
+        }
+
+        stickyHeader {
+            Text(
+                text = "Data & Backup",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(vertical = Dimens.SpacingSmall)
+            )
+        }
+        item {
+            SettingsActionItem(
+                title = "Backup to File",
+                subtitle = if (lastBackupTime > 0) "Last backup: ${dateFormat.format(Date(lastBackupTime))}" else "Create a local backup",
+                icon = Icons.Default.Save,
+                onClick = { backupLauncher.launch("pdfwallet_backup.zip") }
+            )
+            
+            SettingsActionItem(
+                title = "Restore from File",
+                subtitle = "Restore a previous backup",
+                icon = Icons.Default.SettingsBackupRestore,
+                onClick = { restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream")) }
+            )
+            Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
+        }
+        
+        stickyHeader {
+            Text(
+                text = "About",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(vertical = Dimens.SpacingSmall)
+            )
+        }
+        item {
+            SettingsActionItem(
+                title = "Debug Logs",
+                subtitle = "View app diagnostics",
+                icon = Icons.Default.BugReport,
+                onClick = onNavigateToDebug
+            )
+            
+            Spacer(modifier = Modifier.height(Dimens.SpacingLarge))
+            
+            Text(
+                text = "App Version ${BuildConfig.VERSION_NAME}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.SpacingLarge),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -210,7 +267,6 @@ fun SettingsSwitchItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = Dimens.SpacingSmall),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(Dimens.RadiusLarge)
     ) {
         Row(
@@ -247,7 +303,6 @@ fun SettingsActionItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = Dimens.SpacingSmall),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(Dimens.RadiusLarge)
     ) {
         Row(

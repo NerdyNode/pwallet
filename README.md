@@ -10,6 +10,7 @@ Import, process, organize, and retrieve travel, identity, and everyday documents
 
 <p>
   <img src="https://github.com/NerdyNode/pwallet/actions/workflows/build.yml/badge.svg" alt="Build" />
+  <img src="https://img.shields.io/badge/version-2.1.1-blue" alt="Version 2.1.1" />
   <img src="https://img.shields.io/badge/Android-API%2026%2B-3DDC84?logo=android&logoColor=white" alt="Android API 26+" />
   <img src="https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin 2.2.10" />
   <img src="https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white" alt="Jetpack Compose" />

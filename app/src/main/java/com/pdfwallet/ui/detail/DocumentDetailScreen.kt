@@ -265,10 +265,10 @@ fun SharedTransitionScope.DocumentContent(
             Column(modifier = Modifier.padding(Dimens.SpacingLarge)) {
                 val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
                 val addedDate = dateFormat.format(Date(doc.importDate))
-                val meta = doc.additionalMeta
+                val meta = doc.metadata
 
                 when (meta) {
-                    is com.pdfwallet.data.db.TicketMetadata.GovernmentId -> {
+                    is com.pdfwallet.data.db.DocumentMetadata.GovernmentId -> {
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Box(modifier = Modifier.weight(1f)) {
                                 DocumentField("ID NUMBER", doc.documentId ?: "--", accent, onCopy)
@@ -287,7 +287,7 @@ fun SharedTransitionScope.DocumentContent(
                             }
                         }
                     }
-                    is com.pdfwallet.data.db.TicketMetadata.Hotel -> {
+                    is com.pdfwallet.data.db.DocumentMetadata.Hotel -> {
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Box(modifier = Modifier.weight(1f)) {
                                 DocumentField("HOTEL", meta.hotelName ?: "--", accent, onCopy)
@@ -308,7 +308,7 @@ fun SharedTransitionScope.DocumentContent(
                         Spacer(modifier = Modifier.height(Dimens.SpacingMedium))
                         DocumentField("ROOM DETAILS", meta.roomDetails ?: "--", accent, onCopy)
                     }
-                    is com.pdfwallet.data.db.TicketMetadata.Membership -> {
+                    is com.pdfwallet.data.db.DocumentMetadata.Membership -> {
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Box(modifier = Modifier.weight(1f)) {
                                 DocumentField("PROVIDER", meta.provider ?: "--", accent, onCopy)

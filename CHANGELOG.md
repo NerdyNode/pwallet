@@ -7,7 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.1] - 2026-09-17
+
+### Added
+
+- **Pass template system** — Modular template architecture with dedicated renderers for Airline, Train, Movie, Government ID, and Generic document types
+- **Template contract & registry** — `TemplateContract` interface and `TemplateRegistry` for type-safe template resolution
+- **Shared pass components** — Reusable Compose components in `SharedComponents.kt` for consistent pass UI
+- **Palette helper** — Dynamic color extraction from document thumbnails (`PaletteHelper.kt`)
+- **Barcode config** — Unified barcode configuration model (`BarcodeConfig.kt`)
+- **AI extraction validator** — `ExtractionValidator` for post-extraction quality checks
+- **Gemini prompt builder** — `GeminiPromptBuilder` for structured, reusable AI prompt construction
+- **BarcodePreFilter** — Filters irrelevant barcode candidates before scanning
+- **BarcodeRanker & RankedBarcode** — Ranks detected barcodes by confidence and relevance
+- **ImageBarcodePreprocessor** — Pre-processes images to improve barcode detection accuracy
+- **MlKitOcrExtractor** — Dedicated ML Kit OCR text extraction service
+- **PdfBoxTextExtractor** — Apache PdfBox-based text extraction for better PDF text layer support
+- **PdfXObjectBarcodeExtractor** — Extracts barcodes embedded as PDF XObjects
+- **TextMerger, TextPreProcessor, TextQualityChecker** — Pipeline for normalizing and validating extracted text
+- **StorageCleanupWorker** — Background worker that removes orphaned files from private storage
+- **TicketEditBottomSheet** — In-app bottom sheet for editing ticket metadata
+- **Geist font family** — Added Geist Regular, Medium, SemiBold, Bold, and Black typefaces
+- **Lifecycle-aware Compose extensions** — Added `lifecycle-runtime-compose` and `lifecycle-process`
+- **Palette KTX** — Added `androidx.palette:palette-ktx` for dynamic color theming
+- **JNI packaging fix** — `useLegacyPackaging = false` for proper native lib packaging
+
+### Changed
+
+- **Pass rendering refactored** — Replaced monolithic `PassTemplate.kt` and `PassTemplateResolver.kt` with the new template registry system
+- **`DocumentType`** — Expanded and reorganized document type enum
+- **`Document` entity** — Schema updated with new metadata fields
+- **`DocumentDao`** — Optimized queries for new document model
+- **`AppDatabase`** — Incremented version with migration support
+- **`AiDocumentResult` & `AiResultMapper`** — Aligned with new extraction validator pipeline
+- **`GeminiDocumentAnalyser`** — Integrated `GeminiPromptBuilder` and `ExtractionValidator`
+- **`BarcodeExtractor`** — Delegated to new `BarcodePreFilter`, `BarcodeRanker`, and `ImageBarcodePreprocessor`
+- **`DocumentToBitmapConverter`** — Performance improvements for high-resolution PDF rendering
+- **`DocumentProcessingWorker`** — Integrated full new PDF and barcode pipeline
+- **`DocumentRepository`** — Improved import coordination and deduplication logic
+- **`SettingsRepository`** — Added new preference keys
+- **`DatabaseModule`** — Updated for new schema version
+- **`PdfFileManager`** — Cleanup improvements aligned with `StorageCleanupWorker`
+- **`HomeScreen`** — UI refresh and navigation improvements
+- **`DocumentDetailScreen`** — Updated to use new document model
+- **`TicketDetailScreen` & `TicketDetailViewModel`** — Supports inline editing via `TicketEditBottomSheet`
+- **`SettingsScreen` & `SettingsViewModel`** — New preferences and controls
+- **`DocumentCard`** — Refreshed card design with palette-based theming
+- **`Color.kt`, `DocAccent.kt`, `Type.kt`** — Updated design tokens and Geist font integration
+- **`BarcodeGenerator`** — Minor improvements
+- **`MainActivity` & `MainScreen`** — Navigation structure updates
+- **CameraX** bumped from `1.3.4` → `1.4.1`
+- **`versionCode`** bumped from `1` → `2`
+- **`versionName`** bumped from `1.0` → `2.1.1`
+
+### Removed
+
+- `TicketMetadata.kt` — Superseded by the unified `DocumentMetadata` model
+- `PassTemplate.kt` — Replaced by the new template registry system
+- `PassTemplateResolver.kt` — Replaced by `TemplateRegistry`
+
+---
+
 ## [1.0.0] - 2026-08-26
+
 
 ### Added
 

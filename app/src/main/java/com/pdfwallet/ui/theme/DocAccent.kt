@@ -2,7 +2,6 @@ package com.pdfwallet.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.pdfwallet.data.db.DocumentType
 
@@ -10,12 +9,14 @@ data class DocAccent(
     val primary: Color,
     val onPrimary: Color,
     val container: Color,
-    val onContainer: Color
+    val onContainer: Color,
+    val surface: Color = Color.Unspecified,
+    val onSurface: Color = Color.Unspecified
 )
 
 fun getDocAccent(type: DocumentType, isDark: Boolean): DocAccent {
     return when (type) {
-        DocumentType.GOVERNMENT_ID -> if (isDark) DocAccent(
+        DocumentType.AADHAAR, DocumentType.PAN_CARD, DocumentType.PASSPORT, DocumentType.DRIVING_LICENSE, DocumentType.VOTER_ID -> if (isDark) DocAccent(
             primary = Color(0xFFE8B264), onPrimary = Color(0xFF422C00),
             container = Color(0xFF5E4000), onContainer = Color(0xFFFFDFA6)
         ) else DocAccent(
@@ -36,7 +37,7 @@ fun getDocAccent(type: DocumentType, isDark: Boolean): DocAccent {
             primary = Color(0xFFC0000B), onPrimary = Color(0xFFFFFFFF),
             container = Color(0xFFFFDAD5), onContainer = Color(0xFF410001)
         )
-        DocumentType.BUS -> if (isDark) DocAccent(
+        DocumentType.BUS, DocumentType.CAB -> if (isDark) DocAccent(
             primary = Color(0xFF16A34A), onPrimary = Color(0xFF003915),
             container = Color(0xFF13291C), onContainer = Color(0xFFA8E6BE)
         ) else DocAccent(
@@ -50,28 +51,28 @@ fun getDocAccent(type: DocumentType, isDark: Boolean): DocAccent {
             primary = Color(0xFFB45309), onPrimary = Color(0xFFFFFFFF),
             container = Color(0xFFF3C98A), onContainer = Color(0xFF2E1100)
         )
-        DocumentType.MEMBERSHIP -> if (isDark) DocAccent(
+        DocumentType.MOVIE, DocumentType.EVENT, DocumentType.AMUSEMENT_PARK -> if (isDark) DocAccent(
+            primary = Color(0xFFD946EF), onPrimary = Color(0xFFFFFFFF),
+            container = Color(0xFF4A044E), onContainer = Color(0xFFF9A8D4)
+        ) else DocAccent(
+            primary = Color(0xFFC026D3), onPrimary = Color(0xFFFFFFFF),
+            container = Color(0xFFF9A8D4), onContainer = Color(0xFF4A044E)
+        )
+        DocumentType.INVOICE, DocumentType.RECEIPT, DocumentType.INSURANCE_POLICY -> if (isDark) DocAccent(
             primary = Color(0xFF8B5CF6), onPrimary = Color(0xFFFFFFFF),
             container = Color(0xFF2E1065), onContainer = Color(0xFFDDD6FE)
         ) else DocAccent(
             primary = Color(0xFF7C3AED), onPrimary = Color(0xFFFFFFFF),
             container = Color(0xFFDDD6FE), onContainer = Color(0xFF2E1065)
         )
-        DocumentType.TRANSIT -> if (isDark) DocAccent(
-            primary = Color(0xFF06B6D4), onPrimary = Color(0xFF083344),
-            container = Color(0xFF083344), onContainer = Color(0xFFCFFAFE)
-        ) else DocAccent(
-            primary = Color(0xFF0891B2), onPrimary = Color(0xFFFFFFFF),
-            container = Color(0xFFCFFAFE), onContainer = Color(0xFF083344)
-        )
-        DocumentType.CERTIFICATE -> if (isDark) DocAccent(
+        DocumentType.PRESCRIPTION, DocumentType.MEDICAL_REPORT, DocumentType.LAB_REPORT -> if (isDark) DocAccent(
             primary = Color(0xFFF43F5E), onPrimary = Color(0xFFFFFFFF),
             container = Color(0xFF4C0519), onContainer = Color(0xFFFECDD3)
         ) else DocAccent(
             primary = Color(0xFFE11D48), onPrimary = Color(0xFFFFFFFF),
             container = Color(0xFFFECDD3), onContainer = Color(0xFF4C0519)
         )
-        DocumentType.OTHER -> if (isDark) DocAccent(
+        else -> if (isDark) DocAccent(
             primary = Color(0xFFC8C6CA), onPrimary = Color(0xFF303033),
             container = Color(0xFF464649), onContainer = Color(0xFFE4E2E6)
         ) else DocAccent(
@@ -81,17 +82,10 @@ fun getDocAccent(type: DocumentType, isDark: Boolean): DocAccent {
     }
 }
 
-/**
- * Gets the chart color for this document type, respecting the provided dark mode flag
- * instead of directly querying isSystemInDarkTheme().
- */
 fun DocumentType.getChartColor(isDark: Boolean): Color {
     return getDocAccent(this, isDark).primary
 }
 
-/**
- * Composable convenience that resolves dark mode from the composition.
- */
 @Composable
 fun DocumentType.getChartColor(): Color {
     return getDocAccent(this, isSystemInDarkTheme()).primary

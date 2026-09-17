@@ -8,118 +8,121 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.pdfwallet.R
 
-val PlusJakartaSans = FontFamily(
-    Font(R.font.plus_jakarta_sans_regular, FontWeight.Normal),
-    Font(R.font.plus_jakarta_sans_medium, FontWeight.Medium),
-    Font(R.font.plus_jakarta_sans_semibold, FontWeight.SemiBold),
-    Font(R.font.plus_jakarta_sans_bold, FontWeight.Bold),
-    Font(R.font.plus_jakarta_sans_extrabold, FontWeight.ExtraBold),
+val GeistSans = FontFamily(
+    Font(R.font.geist_regular, FontWeight.Normal),
+    Font(R.font.geist_medium, FontWeight.Medium),
+    Font(R.font.geist_semibold, FontWeight.SemiBold),
+    Font(R.font.geist_bold, FontWeight.Bold),
+    Font(R.font.geist_black, FontWeight.ExtraBold),
 )
+
+// Keep legacy alias for any external references
+val PlusJakartaSans = GeistSans
 
 /** Monospace font for ticket codes, PNRs, barcodes, and masked IDs. */
 val TicketCodeFont = FontFamily.Monospace
 
 val Typography = Typography(
     displayLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.Bold,
         fontSize = 57.sp,
         lineHeight = 64.sp,
         letterSpacing = (-0.25).sp
     ),
     displayMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.Bold,
         fontSize = 45.sp,
         lineHeight = 52.sp,
         letterSpacing = 0.sp
     ),
     displaySmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.SemiBold,
         fontSize = 36.sp,
         lineHeight = 44.sp,
         letterSpacing = 0.sp
     ),
     headlineLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 32.sp,
         lineHeight = 40.sp,
         letterSpacing = 0.sp
     ),
     headlineMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
         lineHeight = 36.sp,
         letterSpacing = 0.sp
     ),
     headlineSmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.SemiBold,
         fontSize = 24.sp,
         lineHeight = 32.sp,
         letterSpacing = 0.sp
     ),
     titleLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.Bold,
         fontSize = 22.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp
     ),
     titleMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.SemiBold,
         fontSize = 18.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.sp
     ),
     titleSmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp
     ),
     bodyLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.sp
     ),
     bodyMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.05.sp
     ),
     bodySmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.4.sp
     ),
     labelLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.Bold,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp
     ),
     labelMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.SemiBold,
         fontSize = 12.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
     ),
     labelSmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = GeistSans,
         fontWeight = FontWeight.Bold,
         fontSize = 10.sp,
         lineHeight = 14.sp,

@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Document::class, AppLog::class, OfflineDocumentEntity::class], version = 6, exportSchema = false)
+@Database(entities = [Document::class, AppLog::class, OfflineDocumentEntity::class], version = 7, exportSchema = false)
 @TypeConverters(MetadataConverter::class, EnumConverters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun documentDao(): DocumentDao
@@ -45,6 +45,14 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE documents ADD COLUMN maskedIdentifier TEXT")
                 db.execSQL("ALTER TABLE documents ADD COLUMN collectionId INTEGER")
                 db.execSQL("ALTER TABLE documents ADD COLUMN localPath TEXT")
+            }
+        }
+        
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE documents ADD COLUMN aiConfidence REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE documents ADD COLUMN textQualityTier TEXT NOT NULL DEFAULT 'UNKNOWN'")
+                db.execSQL("ALTER TABLE documents ADD COLUMN validationFlags TEXT NOT NULL DEFAULT ''")
             }
         }
     }

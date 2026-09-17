@@ -41,7 +41,19 @@ class PdfWalletApp : Application(), Configuration.Provider {
         createNotificationChannels()
         scheduleWaitlistWorker()
         scheduleExpiryWorker()
+        scheduleStorageCleanupWorker()
         syncManager.schedulePeriodicSync()
+    }
+
+    private fun scheduleStorageCleanupWorker() {
+        val workRequest = androidx.work.PeriodicWorkRequestBuilder<com.pdfwallet.service.worker.StorageCleanupWorker>(
+            7, java.util.concurrent.TimeUnit.DAYS
+        ).build()
+        androidx.work.WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "storage_cleanup",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
     }
 
     private fun scheduleExpiryWorker() {

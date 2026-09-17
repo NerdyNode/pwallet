@@ -18,7 +18,7 @@ class EnumConverters {
 
     @TypeConverter
     fun toDocumentType(value: String): DocumentType =
-        DocumentType.entries.find { it.name == value } ?: DocumentType.OTHER
+        DocumentType.entries.find { it.name == value } ?: DocumentType.UNKNOWN
 
     // CaptureSource
     @TypeConverter
@@ -35,4 +35,19 @@ class EnumConverters {
     @TypeConverter
     fun toBookingStatus(value: String?): BookingStatus? =
         value?.let { BookingStatus.entries.find { e -> e.name == it } ?: BookingStatus.UNKNOWN }
+
+    // TextQualityTier
+    @TypeConverter
+    fun fromTextQualityTier(tier: TextQualityTier): String = tier.name
+
+    @TypeConverter
+    fun toTextQualityTier(value: String): TextQualityTier =
+        TextQualityTier.entries.find { it.name == value } ?: TextQualityTier.UNKNOWN
+
+    // List<String> for validationFlags
+    @TypeConverter
+    fun fromStringList(list: List<String>): String = list.joinToString("||")
+
+    @TypeConverter
+    fun toStringList(value: String): List<String> = if (value.isEmpty()) emptyList() else value.split("||")
 }
